@@ -3,7 +3,7 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 
 
-package com.google.appinventor.components.runtime;
+package edu.mills.lightsensor;
 
 import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.DesignerProperty;
@@ -15,6 +15,7 @@ import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.runtime.util.ErrorMessages;
+import com.google.appinventor.components.runtime.*;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -23,8 +24,6 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 import android.os.Handler;
-
-import android.util.Log;
 
 import android.view.Surface;
 import android.view.WindowManager;
@@ -41,16 +40,12 @@ import java.util.Queue;
  */
 @DesignerComponent(version = 1,
                    description = "Non-visible component that can measure the light level.",
-    category = ComponentCategory.SENSORS,
+    category = ComponentCategory.EXTENSION,
     nonVisible = true,
-    iconName = "images/lightsensor.png")
-@SimpleObject
+    iconName = "aiwebres/lightsensor.png")
+@SimpleObject(external=true)
 public class LightSensor extends AndroidNonvisibleComponent
     implements OnStopListener, OnResumeListener, SensorComponent, SensorEventListener, Deleteable {
-
-  // Logging and Debugging
-  private static final String LOG_TAG = "LightSensor";
-  private static final boolean DEBUG = true;
 
   // Backing for sensor values
   private AveragingBuffer buffer;
