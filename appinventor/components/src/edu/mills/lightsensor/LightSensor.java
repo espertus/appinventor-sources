@@ -39,10 +39,10 @@ import java.util.Queue;
  * (http://developer.android.com/reference/android/hardware/SensorListener.html).
  */
 @DesignerComponent(version = 1,
-                   description = "Non-visible component that can measure the light level.",
+                   description = "Non-visible component that can measure the light level. Icon made by Freepik from www.flaticon.com",
     category = ComponentCategory.EXTENSION,
     nonVisible = true,
-    iconName = "aiwebres/lightsensor.png")
+    iconName = "aiwebres/brightness.png")
 @SimpleObject(external=true)
 public class LightSensor extends AndroidNonvisibleComponent
     implements OnStopListener, OnResumeListener, SensorComponent, SensorEventListener, Deleteable {
@@ -149,7 +149,7 @@ public class LightSensor extends AndroidNonvisibleComponent
   }
 
   /**
-   * Returns the lux.
+   * Returns the average of the last ten lux values.
    * The sensor must be enabled to return meaningful values.
    *
    * @return lux
