@@ -9,26 +9,22 @@ import com.google.appinventor.components.annotations.DesignerComponent;
 import com.google.appinventor.components.annotations.DesignerProperty;
 import com.google.appinventor.components.annotations.PropertyCategory;
 import com.google.appinventor.components.annotations.SimpleEvent;
-import com.google.appinventor.components.annotations.SimpleFunction;
 import com.google.appinventor.components.annotations.SimpleObject;
 import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
 import com.google.appinventor.components.runtime.*;
 
+import edu.mills.envsensor.EnvSensor;
+
 import android.content.Context;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
-import android.hardware.SensorManager;
-import android.os.Handler;
 
 import java.util.List;
 
 /**
  * Physical world component that can measure the light level.
- * It is implemented using
- * android.hardware.SensorListener
+ * It is implemented using android.hardware.SensorListener
  * (http://developer.android.com/reference/android/hardware/SensorListener.html).
  */
 @DesignerComponent(version = 1,
@@ -37,54 +33,14 @@ import java.util.List;
     nonVisible = true,
     iconName = "aiwebres/brightness.png")
 @SimpleObject(external=true)
-public class LightSensor extends AndroidNonvisibleComponent
-    implements OnStopListener, OnResumeListener, SensorComponent, SensorEventListener, Deleteable {
-
-  // Backing for sensor values
-  private AveragingBuffer buffer;
-  private static final int BUFFER_SIZE = 10;
-
-  private final SensorManager sensorManager;
-  private Sensor sensor;
-  private boolean enabled;
-
+public class LightSensor extends EnvSensor {
   /**
    * Creates a new LightSensor component.
    *
    * @param container  ignored (because this is a non-visible component)
    */
   public LightSensor(ComponentContainer container) {
-    super(container.$form());
-    form.registerForOnResume(this);
-    form.registerForOnStop(this);
-
-    enabled = true;
-    sensorManager = (SensorManager) container.$context().getSystemService(Context.SENSOR_SERVICE);
-    sensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
-    buffer = new AveragingBuffer(BUFFER_SIZE);
-    startListening();
-  }
-
-
-  /**
-   * Indicates the light level changed.
-   */
-  @SimpleEvent
-  public void LightChanged(float lux) {
-    EventDispatcher.dispatchEvent(this, "LightChanged", lux);
-  }
-
-  /**
-   * Available property getter method (read-only property).
-   *
-   * @return {@code true} indicates that a light sensor is available,
-   *         {@code false} that it isn't
-   */
-  @SimpleProperty(
-      category = PropertyCategory.BEHAVIOR)
-  public boolean Available() {
-    List<Sensor> sensors = sensorManager.getSensorList(Sensor.TYPE_LIGHT);
-    return sensors.size() > 0;
+    super(container.$form(), Sensor.TYPE_LIGHT);
   }
 
   /**
@@ -94,20 +50,9 @@ public class LightSensor extends AndroidNonvisibleComponent
    * @return {@code true} indicates that the sensor generates events,
    *         {@code false} that it doesn't
    */
-  @SimpleProperty(
-      category = PropertyCategory.BEHAVIOR)
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public boolean Enabled() {
     return enabled;
-  }
-
-  // Assumes that sensorManager has been initialized, which happens in constructor
-  private void startListening() {
-      sensorManager.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME);
-  }
-
-  // Assumes that sensorManager has been initialized, which happens in constructor
-  private void stopListening() {
-    sensorManager.unregisterListener(this);
   }
 
   /**
@@ -122,15 +67,30 @@ public class LightSensor extends AndroidNonvisibleComponent
       defaultValue = "True")
   @SimpleProperty
   public void Enabled(boolean enabled) {
-    if (this.enabled == enabled) {
-      return;
-    }
-    this.enabled = enabled;
-    if (enabled) {
-      startListening();
-    } else {
-      stopListening();
-    }
+    setEnabled(enabled);
+  }
+
+  /**
+   * Indicates whether the sensor is available.
+   *
+   * @return {@code true} if available, {@code false} otherwise
+   */
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR)
+  public boolean Available() {
+    return isAvailable();
+  }
+
+  @Override
+  protected void valueChanged(float value) {
+    LightChanged(value);
+  }
+
+  /**
+   * Indicates the light level changed.
+   */
+  @SimpleEvent
+  public void LightChanged(float lux) {
+    EventDispatcher.dispatchEvent(this, "LightChanged", lux);
   }
 
   /**
@@ -139,75 +99,8 @@ public class LightSensor extends AndroidNonvisibleComponent
    *
    * @return lux
    */
-  @SimpleProperty(
-      category = PropertyCategory.BEHAVIOR)
+  @SimpleProperty(category = PropertyCategory.BEHAVIOR)
   public float Lux() {
-      return buffer.getAverage();
-  }
-
-  // SensorListener implementation
-  @Override
-  public void onSensorChanged(SensorEvent sensorEvent) {
-    if (enabled && sensorEvent.sensor.getType() == Sensor.TYPE_LIGHT) {
-      final float[] values = sensorEvent.values;
-      buffer.insert(values[0]);
-      LightChanged(values[0]);
-    }
-  }
-
-  @Override
-  public void onAccuracyChanged(Sensor sensor, int accuracy) {
-  }
-    
-  @Override
-  public void onResume() {
-    if (enabled) {
-      startListening();
-    }
-  }
-
-  @Override
-  public void onStop() {
-    if (enabled) {
-      stopListening();
-    }
-  }
-
-  @Override
-  public void onDelete() {
-    if (enabled) {
-      stopListening();
-    }
-  }
-
-  private class AveragingBuffer {
-    private Float[] data;
-    private int next;
-
-    private AveragingBuffer(int size) {
-      data = new Float[size];
-      next = 0;
-    }
-
-    private void insert(Float datum) {
-      data[next++] = datum;
-      if (next == data.length) {
-        next = 0;
-      }
-    }
-
-    private float getAverage() {
-      double sum = 0;
-      int count = 0;
-
-      for (int i = 0; i < data.length; i++) {
-        if (data[i] != null) {
-          sum += data[i];
-          count++;
-        }
-      }
-
-      return (float) (count == 0 ? sum : sum / count);
-    }
+    return getAverageValue();
   }
 }
