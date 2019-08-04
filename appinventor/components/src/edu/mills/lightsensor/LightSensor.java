@@ -14,7 +14,6 @@ import com.google.appinventor.components.annotations.SimpleObject;
 import com.google.appinventor.components.annotations.SimpleProperty;
 import com.google.appinventor.components.common.ComponentCategory;
 import com.google.appinventor.components.common.PropertyTypeConstants;
-import com.google.appinventor.components.runtime.util.ErrorMessages;
 import com.google.appinventor.components.runtime.*;
 
 import android.content.Context;
@@ -22,15 +21,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-
 import android.os.Handler;
 
-import android.view.Surface;
-import android.view.WindowManager;
-
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 
 /**
  * Physical world component that can measure the light level.
@@ -51,16 +44,9 @@ public class LightSensor extends AndroidNonvisibleComponent
   private AveragingBuffer buffer;
   private static final int BUFFER_SIZE = 10;
 
-  private int accuracy;
-
   private final SensorManager sensorManager;
-
-  private final WindowManager windowManager;
-
-  // Indicates whether the sensor should generate events
-  private boolean enabled;
-
   private Sensor sensor;
+  private boolean enabled;
 
   /**
    * Creates a new LightSensor component.
@@ -73,7 +59,6 @@ public class LightSensor extends AndroidNonvisibleComponent
     form.registerForOnStop(this);
 
     enabled = true;
-    windowManager = (WindowManager) container.$context().getSystemService(Context.WINDOW_SERVICE);
     sensorManager = (SensorManager) container.$context().getSystemService(Context.SENSOR_SERVICE);
     sensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
     buffer = new AveragingBuffer(BUFFER_SIZE);
@@ -164,7 +149,6 @@ public class LightSensor extends AndroidNonvisibleComponent
   @Override
   public void onSensorChanged(SensorEvent sensorEvent) {
     if (enabled && sensorEvent.sensor.getType() == Sensor.TYPE_LIGHT) {
-      accuracy = sensorEvent.accuracy;
       final float[] values = sensorEvent.values;
       buffer.insert(values[0]);
       LightChanged(values[0]);
