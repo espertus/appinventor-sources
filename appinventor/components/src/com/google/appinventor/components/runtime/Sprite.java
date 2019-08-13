@@ -18,8 +18,12 @@ import com.google.appinventor.components.runtime.errors.IllegalArgumentError;
 import com.google.appinventor.components.runtime.util.BoundingBox;
 import com.google.appinventor.components.runtime.util.TimerInternal;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
+import android.graphics.Path;
 import android.os.Handler;
 import android.util.Log;
+import android.view.animation.LinearInterpolator;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -920,6 +924,46 @@ public abstract class Sprite extends VisibleComponent
       updateCoordinates();
       registerChange();
     }
+  }
+
+  // For animation
+  public void setX(float x) {
+    X((double) x);
+  }
+
+  @SimpleFunction
+  public void GlideHorizontally(int ms, double dx) {
+    ObjectAnimator animation =
+      ObjectAnimator.ofFloat(this, "X", (float) X(), (float) (X() + dx));
+    animation.setDuration(ms);
+    animation.start();
+  }
+
+  @SimpleFunction
+  public void GlideTo(int ms, float x, float y) {
+    final double x0 = xLeft;
+    final double y0 = yTop;
+    final double dx = x - x0;
+    final double dy = y - y0;
+    final double distance = Math.sqrt(dx * dx + dy * dy);
+    final double xscalar = dx / distance;
+    final double yscalar = dy / distance;
+    // Log.d(LOG_TAG, "x0: " + x0 + ", y0: " + y0 + ", x: " + x + ", " + x + ", y: " + y + ", distance: " + distance);
+    // Log.d(LOG_TAG, "dx: " + dx + ", dy: " + dy + ", xscalar: " + xscalar + ", yscalar: " + yscalar + ", ms: " +  ms);
+    ValueAnimator animation = ValueAnimator.ofFloat(0f, (float) distance);
+    animation.setDuration(ms);
+    animation.setInterpolator(new LinearInterpolator()); // TODO: Consider other interpolations.
+    animation.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+        @Override
+        public void onAnimationUpdate(ValueAnimator updatedAnimation) {
+          float val = (float) updatedAnimation.getAnimatedValue();
+          // Log.d(LOG_TAG, "val: " + val + ", xLeft: " + xLeft + ", yTop: " + yTop);
+          // Violate abstraction to prevent 2 view updates.
+          xLeft = x0 + val * xscalar;
+          yTop = y0 + val * yscalar;
+          registerChange();
+        }});
+    animation.start();
   }
 
   // Component implementation
