@@ -931,20 +931,32 @@ public abstract class Sprite extends VisibleComponent
     X((double) x);
   }
 
+  /**
+   * Glides this ball or sprite horizontally (along the x-axis).
+   *
+   * @param ms the number of milliseconds for the glide
+   * @param dx the horizontal distance in pixels (positive for right, negative for left)
+   */
   @SimpleFunction
-  public void GlideHorizontally(int ms, double dx) {
+  public void GlideHorizontally(int ms, int dx) {
     ObjectAnimator animation =
       ObjectAnimator.ofFloat(this, "X", (float) X(), (float) (X() + dx));
     animation.setDuration(ms);
     animation.start();
   }
 
+  /**
+   * Glides this ball or sprite by changing its x-coordinate and y-coordinate
+   * the specified amounts.
+   *
+   * @param ms the number of milliseconds for the glide
+   * @param dx the horizontal distance in pixels (positive for right, negative for left)
+   * @param dy the vertical distance in pixels (positive for down, negative for up)
+   */
   @SimpleFunction
-  public void GlideTo(int ms, float x, float y) {
+  public void Glide(int ms, double dx, double dy) {
     final double x0 = xLeft;
     final double y0 = yTop;
-    final double dx = x - x0;
-    final double dy = y - y0;
     final double distance = Math.sqrt(dx * dx + dy * dy);
     final double xscalar = dx / distance;
     final double yscalar = dy / distance;
@@ -966,7 +978,16 @@ public abstract class Sprite extends VisibleComponent
     animation.start();
   }
 
-  // Component implementation
+  @SimpleFunction
+  public void GlideAlongAngle(int ms, double degrees, int distance) {
+    double angle = Math.toRadians(degrees);
+    double dx = Math.cos(angle) * distance;
+    double dy = -Math.sin(angle) * distance;
+
+    Glide(ms, dx, dy);
+  }
+
+// Component implementation
 
   @Override
   public HandlesEventDispatching getDispatchDelegate() {
