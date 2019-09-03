@@ -946,7 +946,7 @@ public abstract class Sprite extends VisibleComponent
   }
 
   /**
-   * Glides this ball or sprite by changing its x-coordinate and y-coordinate
+   * Glides this ball or ImageSprite by changing its x-coordinate and y-coordinate
    * the specified amounts.
    *
    * @param ms the number of milliseconds for the glide
@@ -979,6 +979,14 @@ public abstract class Sprite extends VisibleComponent
   }
 
   @SimpleFunction
+  /**
+   * Glides this ball or ImageSprite at the specified angle over
+   * the specified distance and time.
+   *
+   * @param ms the number of milliseconds to glide
+   * @param degrees the angle
+   * @param distance the distance
+   */
   public void GlideAlongAngle(int ms, double degrees, int distance) {
     double angle = Math.toRadians(degrees);
     double dx = Math.cos(angle) * distance;
